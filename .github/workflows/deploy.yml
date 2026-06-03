@@ -6,8 +6,6 @@ on:
       - main
 
 env:
-  ACR_NAME: flightacr2026
-  IMAGE_NAME: flightapp
   WEBAPP_NAME: flight-price-predictor
   RESOURCE_GROUP: FLIGHT_MLOPS
 
@@ -18,50 +16,56 @@ jobs:
 
     steps:
 
-    - name: Checkout Code
-      uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-    - name: Azure Login
-      uses: azure/login@v2
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
 
-    - name: Login To Azure Container Registry
-      uses: azure/docker-login@v2
-      with:
-        login-server: flightacr2026-awa6buc2h7dubxfj.azurecr.io
-        username: ${{ secrets.ACR_USERNAME }}
-        password: ${{ secrets.ACR_PASSWORD }}
+      - name: Verify Azure Login
+        run: az account show
 
-    - name: Build Docker Image
-      run: |
-        docker build -t flightacr2026-awa6buc2h7dubxfj.azurecr.io/flightapp:${{ github.sha }} .
+      - name: Login To Azure Container Registry
+        uses: azure/docker-login@v2
+        with:
+          login-server: flightacr2026-awa6buc2h7dubxfj.azurecr.io
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
 
-    - name: Push Docker Image
-      run: |
-        docker push flightacr2026-awa6buc2h7dubxfj.azurecr.io/flightapp:${{ github.sha }}
+      - name: Build Docker Image
+        run: |
+          docker build -t flightacr2026-awa6buc2h7dubxfj.azurecr.io/flightapp:${{ github.sha }} .
 
-    - name: Configure Web App Container
-      run: |
-        az webapp config container set \
-          --name flight-price-predictor \
-          --resource-group FLIGHT_MLOPS \
-          --docker-custom-image-name flightacr2026-awa6buc2h7dubxfj.azurecr.io/flightapp:${{ github.sha }} \
-          --docker-registry-server-url https://flightacr2026-awa6buc2h7dubxfj.azurecr.io \
-          --docker-registry-server-user ${{ secrets.ACR_USERNAME }} \
-          --docker-registry-server-password ${{ secrets.ACR_PASSWORD }}
+      - name: Push Docker Image
+        run: |
+          docker push flightacr2026-awa6buc2h7dubxfj.azurecr.io/flightapp:${{ github.sha }}
 
-    - name: Configure App Settings
-      run: |
-        az webapp config appsettings set \
-          --name flight-price-predictor \
-          --resource-group FLIGHT_MLOPS \
-          --settings \
-          WEBSITES_PORT=5000 \
-          AZURE_STORAGE_CONNECTION_STRING="${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}"
+      - name: Configure Web App Container
+        run: |
+          az webapp config container set \
+            --name flight-price-predictor \
+            --resource-group FLIGHT_MLOPS \
+            --docker-custom-image-name flightacr2026-awa6buc2h7dubxfj.azurecr.io/flightapp:${{ github.sha }} \
+            --docker-registry-server-url https://flightacr2026-awa6buc2h7dubxfj.azurecr.io \
+            --docker-registry-server-user ${{ secrets.ACR_USERNAME }} \
+            --docker-registry-server-password ${{ secrets.ACR_PASSWORD }}
 
-    - name: Restart Web App
-      run: |
-        az webapp restart \
-          --name flight-price-predictor \
-          --resource-group FLIGHT_MLOPS
+      - name: Configure App Settings
+        run: |
+          az webapp config appsettings set \
+            --name flight-price-predictor \
+            --resource-group FLIGHT_MLOPS \
+            --settings \
+            WEBSITES_PORT=5000 \
+            AZURE_STORAGE_CONNECTION_STRING="${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}"
+
+      - name: Restart Web App
+        run: |
+          az webapp restart \
+            --name flight-price-predictor \
+            --resource-group FLIGHT_MLOPS
