@@ -1,14 +1,17 @@
 pandas
-numpy
 xgboost
-catboost
-scikit-learn
+# catboost
+scikit-learn==1.5.2
 matplotlib
 scipy
 seaborn
-
-
-
-
+flask
+numpy<2
+pandas>=2.0
+pyarrow>=10.0
+dill
+gunicorn
+azure-storage-blob
+python-dotenv
 # connection for the setup.py
 # -e .

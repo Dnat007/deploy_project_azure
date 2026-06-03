@@ -1,18 +1,21 @@
 from flask import Flask, request, render_template, redirect, url_for
 from src.pipeline.predictionpipeline import CustomData, PredictPipeline
 from src.logger import logging
+from dotenv import load_dotenv
+from src.utils import download_artifacts
+
+load_dotenv()
+download_artifacts()
 
 app = Flask(__name__)
-
 @app.route('/')
 def home():
     return redirect(url_for('predict_datapoint'))
 
-# Prediction route
 
-
-@app.route('/predict', methods=["GET", "POST"])
+@app.route('/predict1', methods=["GET", "POST"])
 def predict_datapoint():
+    print("Function Called")
     if request.method == "GET":
         return render_template("form.html")
 
@@ -40,9 +43,9 @@ def predict_datapoint():
 
         # Rounding the prediction value up to 2 points
         result = round(pred[0], 2)
-
+        print("POST Request Received")
         return render_template("result.html", final_result=result)
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080)
+    app.run(host='0.0.0.0', port=5000)

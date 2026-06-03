@@ -8,6 +8,7 @@ from sklearn.metrics import r2_score
 from sklearn.model_selection import GridSearchCV
 
 from src.exception import CustomException
+from azure.storage.blob import BlobServiceClient
 
 
 def save_object(file_path, obj):
@@ -62,3 +63,75 @@ def load_object(file_path):
 
     except Exception as e:
         raise CustomException(e, sys)
+
+
+
+
+
+
+
+def download_artifacts():
+
+    connection_string = os.getenv(
+        "AZURE_STORAGE_CONNECTION_STRING"
+    )
+
+    if not connection_string:
+        raise Exception(
+            "AZURE_STORAGE_CONNECTION_STRING not found"
+        )
+
+    os.makedirs("artifacts", exist_ok=True)
+
+    blob_service_client = (
+        BlobServiceClient.from_connection_string(
+            connection_string
+        )
+    )
+
+    container_name = "mlopscontainer"
+
+    files = [
+        "model.pkl",
+        "preprocessor.pkl"
+    ]
+
+    for file_name in files:
+
+        local_file = os.path.join(
+            "artifacts",
+            file_name
+        )
+
+        if os.path.exists(local_file):
+
+            print(
+                f"{file_name} already exists"
+            )
+
+            continue
+
+        print(
+            f"Downloading {file_name}"
+        )
+
+        blob_client = (
+            blob_service_client.get_blob_client(
+                container=container_name,
+                blob=file_name
+            )
+        )
+
+        with open(local_file, "wb") as f:
+
+            download_stream = (
+                blob_client.download_blob()
+            )
+
+            f.write(
+                download_stream.readall()
+            )
+
+        print(
+            f"{file_name} downloaded"
+        )

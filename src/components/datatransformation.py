@@ -36,16 +36,12 @@ class DataTransformation:
                               'Duration_Min', 'Journey_Day', 'Journey_Month']
             logging.info('Pipeline Initiated')
 
-            # Numerical Pipeline
             num_pipeline = Pipeline(
                 steps=[
                     ('imputer', SimpleImputer(strategy='median')),
                     ('scaler', StandardScaler())
                 ]
             )
-
-            # Categorical Pipelines
-            # One-Hot Encoding Pipeline
             one_hot_encode_pipeline = Pipeline(
                 steps=[
                     ('imputer', SimpleImputer(strategy='most_frequent')),
@@ -53,7 +49,6 @@ class DataTransformation:
                 ]
             )
 
-            # Ordinal Encoding Pipeline
             ordinal_encode_pipeline = Pipeline(
                 steps=[
                     ('imputer', SimpleImputer(strategy='most_frequent')),
@@ -97,21 +92,17 @@ class DataTransformation:
                 f'Test Dataframe Head : \n {test_df.head().to_string()}')
 
             for df in [train_df, test_df]:
-                # Extracting features from 'Date_of_Journey'
                 df['Duration_Hour'] = df['Duration'].str.extract(
                     r'(\d+)h', expand=False).fillna(0).astype(int)
                 df['Duration_Min'] = df['Duration'].str.extract(
                     r'(\d+)h', expand=False).fillna(0).astype(int)
 
-                # Extracting features from 'Dep_Time'
                 df['Departure_Part_of_Day'] = pd.to_datetime(df['Dep_Time'], format='%H:%M').dt.hour.apply(
                     lambda x: 'morning' if 5 <= x < 12 else 'afternoon' if 12 <= x < 17 else 'evening' if 17 <= x < 21 else 'night')
 
-                # Extracting features from 'Arrival_Time'
                 df['Arrival_Part_of_Day'] = df['Arrival_Time'].apply(lambda x: pd.to_datetime(x, errors='coerce').hour).apply(
                     lambda x: 'morning' if 5 <= x < 12 else 'afternoon' if 12 <= x < 17 else 'evening' if 17 <= x < 21 else 'night')
 
-                # Extracting features from 'Date_of_Journey'
                 df['Journey_Day'] = pd.to_datetime(
                     df['Date_of_Journey'], format='%d/%m/%Y').dt.day
                 df['Journey_Month'] = pd.to_datetime(
